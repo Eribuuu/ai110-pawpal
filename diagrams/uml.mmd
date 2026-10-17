@@ -10,6 +10,7 @@ classDiagram
         +remove_pet(pet: Pet) None
         +add_task(task: Task) None
         +remove_task(task: Task) None
+        +get_tasks_for(pet: Pet) list~Task~
     }
 
     class Pet {
@@ -20,17 +21,41 @@ classDiagram
     class Task {
         +str title
         +int duration_minutes
-        +str priority
+        +Priority priority
         +Pet pet
         +bool completed
     }
 
+    class Priority {
+        <<enumeration>>
+        LOW
+        MEDIUM
+        HIGH
+    }
+
+    class ScheduledTask {
+        +Task task
+        +int start_minute
+        +str reason
+        +end_minute() int
+    }
+
+    class Schedule {
+        +list~ScheduledTask~ scheduled
+        +list~tuple~ skipped
+        +total_minutes() int
+    }
+
     class Scheduler {
-        +create_schedule(owner: Owner) list~Task~
+        +create_schedule(owner: Owner) Schedule
     }
 
     Owner "1" o-- "0..*" Pet : owns
     Owner "1" o-- "0..*" Task : manages
     Task "0..*" --> "1" Pet : is for
+    Task --> Priority : has
+    Schedule "1" *-- "0..*" ScheduledTask : contains
+    ScheduledTask "0..*" --> "1" Task : wraps
+    Schedule ..> Task : records skipped
     Scheduler ..> Owner : reads tasks and free time from
-    Scheduler ..> Task : selects and orders
+    Scheduler ..> Schedule : creates

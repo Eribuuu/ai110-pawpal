@@ -13,7 +13,7 @@ Core Tasks:
 3. Owner needs to be able to see todays tasks
 
 Initial Classes:
-1. Owner
+1. Owner (Holds the data for the pets and tasks, who they belong to)
     - attributes:
         - name
         - pets (list)
@@ -22,28 +22,43 @@ Initial Classes:
     - methods:
         - add pet
         - remove pet
+            1. When a pet is removed, also remove the tasks associated with it
         - add task
         - remove task
-2. Pet
+        - get tasks for specific pet (helper function)
+2. Pet (Holds information on pets)
     - attributes:
         - name
         - species
     - methods:
         - None
-3. Task
+3. Task (Holds information on each task)
     - attributes:
         - title (name of task)
         - duration
-        - priority 
+        - priority (will be an enum)
         - pet (the pet the task is tied to)
         - completed (boolean)
     - methods:
         - None
-4. Scheduler:
+4. Scheduler (Creates schedule for the tasks)
     - attributes:
         - None
     - methods:
         - create schedule (creates schedule based on the tasks in the system)
+5. ScheduledTask (Holds when and why a task was chosen to be scheduled)
+    - attributes:
+        - task (the task being scheduled)
+        - start minute (minutes from the start of the owner's free time)
+        - reason (why the task was chosen)
+    - methods:
+        - end minute (calculated from the start minute and the task's duration)
+6. Schedule (Holds the result of creating a schedule)
+    - attributes:
+        - scheduled (list of scheduled tasks)
+        - skipped (list of tasks that were skipped and why)
+    - methods:
+        - total minutes (total time of all scheduled tasks)
 
 **b. Design changes**
 
@@ -55,6 +70,14 @@ In UML phase:
 1. added species attribute to pets
 2. Changed task due_time attribute to a duration attribute and added a priority attribute
 3. Added completed boolean to task 
+
+Post First skeleton created:
+1. Added a note to also delete the tasks associated with each pet that is removed by the remove pet function
+2. Added a helper function to get the tasks associated with a specific pet
+3. Added a note for the priority attribute to be an Enum for easier equality checks later
+4. Added a scheduled task object that will bridge the gap for showing when and why a tasks is chosen to scheduled or skipped
+5. Added a schedule object to hold the schedule of tasks to be displayed
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
