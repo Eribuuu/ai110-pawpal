@@ -7,11 +7,54 @@
 - Briefly describe your initial UML design.
 - What classes did you include, and what responsibilities did you assign to each?
 
+Core Tasks:
+1. Owner needs to be able to add or remove a pet
+2. Owner needs to be able to add or remove a task for a pet
+3. Owner needs to be able to see todays tasks
+
+Initial Classes:
+1. Owner
+    - attributes:
+        - name
+        - pets (list)
+        - tasks (list)
+        - free time (in minutes)
+    - methods:
+        - add pet
+        - remove pet
+        - add task
+        - remove task
+2. Pet
+    - attributes:
+        - name
+        - species
+    - methods:
+        - None
+3. Task
+    - attributes:
+        - title (name of task)
+        - duration
+        - priority 
+        - pet (the pet the task is tied to)
+        - completed (boolean)
+    - methods:
+        - None
+4. Scheduler:
+    - attributes:
+        - None
+    - methods:
+        - create schedule (creates schedule based on the tasks in the system)
+
 **b. Design changes**
 
 - Did your design change during implementation?
 - If yes, describe at least one change and why you made it.
+From AI feedback:
 
+In UML phase:
+1. added species attribute to pets
+2. Changed task due_time attribute to a duration attribute and added a priority attribute
+3. Added completed boolean to task 
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
