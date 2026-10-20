@@ -46,8 +46,8 @@ pip install -r requirements.txt
 
 The core logic lives in `pawpal_system.py`:
 
-- **`Task`**: a care task with a title, duration, priority, start time, and frequency (once, daily, or weekly). `is_due_on(day)` checks whether it happens on a given day, and `mark_complete()` marks it done.
-- **`Pet`**: holds a pet's tasks. You can add or remove tasks, get them sorted by start time, and print them as a list.
+- **`Task`**: one occurrence of a care task, with a title, duration, priority, start time, due date, and frequency (once, daily, or weekly). `is_due_on(day)` checks whether it falls on a given day, `mark_complete()` marks it done, and `next_occurrence()` returns a copy due one day or one week later (or `None` for one-off tasks).
+- **`Pet`**: holds a pet's tasks. You can add or remove tasks, get them sorted by date and start time, and print them as a list. `complete_task(task)` marks a task done and adds its next occurrence if it recurs.
 - **`Owner`**: holds the owner's pets. `get_all_tasks()` returns every task across all pets, each paired with its pet.
 - **`Scheduler`**: builds and prints the daily schedule.
 - **`Schedule` / `ScheduledTask`**: hold the result. Each scheduled task keeps a link to its pet.
@@ -67,8 +67,6 @@ Owner --has--> Pet --has--> Task
   v
 Scheduler --create_schedule()--> Schedule --contains--> ScheduledTask (pet + task)
 ```
-
-`main.py` builds a sample owner with two pets and prints today's schedule. `tests/test_pawpal.py` checks that `mark_complete()` works and that `add_task()` grows a pet's task list.
 
 ## 🖥️ Sample Output
 
@@ -103,14 +101,12 @@ Sample test output:
 
 ## 📐 Smarter Scheduling
 
-> Fill in once you've implemented scheduling logic.
-
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
-| Task sorting | | e.g., by priority, duration |
-| Filtering | | e.g., skip tasks if time runs out |
-| Conflict handling | | e.g., overlapping time slots |
-| Recurring tasks | | e.g., daily vs. weekly |
+| Task sorting | `Scheduler.sort_by_time()`, `Pet.get_tasks()` | Tasks are ordered by start time. When two start at the same time, the higher-priority one goes first, then the shorter one. `create_schedule()` sorts automatically. |
+| Filtering | `Scheduler.filter_tasks()` | Filters by completion status (`completed=True/False`), by pet name (`pet_name=`, ignores upper/lower case), or both. Leaving a filter out skips it. The original order is kept, so results stay sorted by time. |
+| Conflict handling | `Scheduler.detect_conflicts()` | Checks every pair of tasks for overlapping times, across all pets, and returns one warning per clash. It only warns and never moves or drops a task. Back-to-back tasks (one ends at 08:30, the next starts at 08:30) don't count as a conflict. Warnings appear in the CLI output and as `st.warning` in the app. |
+| Recurring tasks | `Pet.complete_task()`, `Task.next_occurrence()` | Each `Task` is one occurrence with a `due_date`. Completing a daily task adds a copy due the next day, and a weekly task adds one due 7 days later. One-off tasks add nothing. Tasks that aren't completed stay on their original date and don't carry forward. |
 
 ## 📸 Demo Walkthrough
 

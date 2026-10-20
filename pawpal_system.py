@@ -1,4 +1,4 @@
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from datetime import date, datetime, time, timedelta
 from enum import Enum
 
@@ -21,8 +21,8 @@ class Task:
     duration_minutes: int
     priority: Priority
     start_time: time
-    frequency: Frequency
-    start_date: date  # ONCE: the only day; DAILY: first day; WEEKLY: sets the weekday
+    frequency: Frequency  # how far ahead the next occurrence is created once this one is completed
+    due_date: date  # the day this occurrence happens
     completed: bool = False
 
     @property
@@ -32,18 +32,19 @@ class Task:
         return (start + timedelta(minutes=self.duration_minutes)).time()
 
     def is_due_on(self, day: date) -> bool:
-        """Whether this task happens on the given day, based on its frequency."""
-        if day < self.start_date:
-            return False
-        if self.frequency is Frequency.ONCE:
-            return day == self.start_date
-        if self.frequency is Frequency.WEEKLY:
-            return day.weekday() == self.start_date.weekday()
-        return True  # DAILY
+        """Whether this occurrence happens on the given day."""
+        return day == self.due_date
 
     def mark_complete(self) -> None:
         """Mark this task as done."""
         self.completed = True
+
+    def next_occurrence(self) -> "Task | None":
+        """A fresh copy due one day (DAILY) or one week (WEEKLY) later; None for ONCE."""
+        if self.frequency is Frequency.ONCE:
+            return None
+        step = timedelta(days=1 if self.frequency is Frequency.DAILY else 7)
+        return replace(self, due_date=self.due_date + step, completed=False)
 
 
 @dataclass
@@ -60,10 +61,18 @@ class Pet:
         """Remove a task from this pet's task list."""
         self.tasks.remove(task)
 
+    def complete_task(self, task: Task) -> Task | None:
+        """Mark a task done and, if it recurs, add its next occurrence; returns that new task."""
+        task.mark_complete()
+        upcoming = task.next_occurrence()
+        if upcoming is not None:
+            self.add_task(upcoming)
+        return upcoming
+
     def get_tasks(self, day: date | None = None) -> list[Task]:
-        """This pet's tasks ordered by start time; only those due on `day` if one is given."""
+        """This pet's tasks ordered by date then start time; only those due on `day` if one is given."""
         tasks = self.tasks if day is None else [t for t in self.tasks if t.is_due_on(day)]
-        return sorted(tasks, key=lambda t: t.start_time)
+        return sorted(tasks, key=lambda t: (t.due_date, t.start_time))
 
     def display_tasks(self, day: date | None = None) -> str:
         """A readable list of this pet's tasks, one per line."""
@@ -126,8 +135,47 @@ class Scheduler:
         for pet, task in owner.get_all_tasks():
             if task.is_due_on(day):
                 schedule.scheduled.append(ScheduledTask(pet, task, f"due {task.frequency.value}"))
-        schedule.scheduled.sort(key=lambda s: s.task.start_time)
+        schedule.scheduled = self.sort_by_time(schedule.scheduled)
         return schedule
+
+    def sort_by_time(self, scheduled: list[ScheduledTask]) -> list[ScheduledTask]:
+        """Order tasks by start time; ties go to higher priority, then shorter duration."""
+        return sorted(
+            scheduled,
+            key=lambda s: (s.task.start_time, -s.task.priority.value, s.task.duration_minutes),
+        )
+
+    def filter_tasks(
+        self,
+        scheduled: list[ScheduledTask],
+        completed: bool | None = None,
+        pet_name: str | None = None,
+    ) -> list[ScheduledTask]:
+        """Keep tasks matching the given completion status and/or pet name (case-insensitive); None means don't filter."""
+        return [
+            s for s in scheduled
+            if (completed is None or s.task.completed == completed)
+            and (pet_name is None or s.pet.name.lower() == pet_name.lower())
+        ]
+
+    def detect_conflicts(self, scheduled: list[ScheduledTask]) -> list[str]:
+        """A warning for each pair of tasks whose time slots overlap; never changes the schedule."""
+        def minutes(s: ScheduledTask) -> tuple[int, int]:
+            # Plain minutes rather than end_time, so a task running past midnight doesn't wrap to 00:xx
+            start = s.task.start_time.hour * 60 + s.task.start_time.minute
+            return start, start + s.task.duration_minutes
+
+        warnings = []
+        for i, a in enumerate(scheduled):
+            a_start, a_end = minutes(a)
+            for b in scheduled[i + 1:]:
+                b_start, b_end = minutes(b)
+                if a_start < b_end and b_start < a_end:
+                    warnings.append(
+                        f"Conflict: {a.pet.name}'s {a.task.title} ({a.task.start_time:%H:%M}-{a.task.end_time:%H:%M}) "
+                        f"overlaps {b.pet.name}'s {b.task.title} ({b.task.start_time:%H:%M}-{b.task.end_time:%H:%M})"
+                    )
+        return warnings
 
     def display_schedule(self, schedule: Schedule) -> str:
         """One line per task, showing which pet it belongs to."""

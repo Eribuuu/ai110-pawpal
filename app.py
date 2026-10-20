@@ -92,7 +92,7 @@ def add_task() -> None:
             priority=Priority[st.session_state.task_priority.upper()],
             start_time=st.session_state.task_start_time,
             frequency=Frequency(st.session_state.task_frequency),
-            start_date=st.session_state.task_start_date,
+            due_date=st.session_state.task_due_date,
         )
     )
     st.toast(f"Added '{title}' to {pet.name}'s tasks.")
@@ -121,7 +121,7 @@ else:
     with col5:
         st.selectbox("Frequency", [f.value for f in Frequency], key="task_frequency")
     with col6:
-        st.date_input("Start date", value=date.today(), key="task_start_date")
+        st.date_input("Due date", value=date.today(), key="task_due_date")
 
     st.button("Add task", on_click=add_task)
     if error := st.session_state.pop("task_error", None):
@@ -140,7 +140,7 @@ else:
                         "duration (min)": t.duration_minutes,
                         "priority": t.priority.name.lower(),
                         "frequency": t.frequency.value,
-                        "start date": t.start_date.isoformat(),
+                        "due date": t.due_date.isoformat(),
                         "done": t.completed,
                     }
                     for t in tasks
@@ -157,7 +157,10 @@ st.caption("Builds a plan from every pet's tasks due on the chosen day.")
 schedule_day = st.date_input("Schedule for", value=date.today(), key="schedule_day")
 
 if st.button("Generate schedule"):
-    schedule = Scheduler().create_schedule(owner, schedule_day)
+    scheduler = Scheduler()
+    schedule = scheduler.create_schedule(owner, schedule_day)
+    for warning in scheduler.detect_conflicts(schedule.scheduled):
+        st.warning(warning)
     if not schedule.scheduled:
         st.info(f"No tasks due on {schedule_day:%A, %b %d}.")
     else:

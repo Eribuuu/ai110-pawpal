@@ -93,10 +93,15 @@ Time handling refactor:
 - What constraints does your scheduler consider (for example: time, priority, preferences)?
 - How did you decide which constraints mattered most?
 
+Currently the constraints for the scheduler are time and priority. I decided that priority was the constraint that mattered most as it is defined by the user that they would want this task done
+as soon as possible or before other tasks.
+
 **b. Tradeoffs**
 
 - Describe one tradeoff your scheduler makes.
 - Why is that tradeoff reasonable for this scenario?
+
+Right now one tradeoff is that all conflicts happen based on any pet, no discrimination between pets. This is fine in this case because it is not implied that there will be multiple people handling these pets.
 
 ---
 
