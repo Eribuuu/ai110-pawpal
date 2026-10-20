@@ -4,26 +4,29 @@ classDiagram
     class Owner {
         +str name
         +list~Pet~ pets
-        +list~Task~ tasks
-        +int free_time_minutes
         +add_pet(pet: Pet) None
         +remove_pet(pet: Pet) None
-        +add_task(task: Task) None
-        +remove_task(task: Task) None
-        +get_tasks_for(pet: Pet) list~Task~
+        +get_all_tasks() list~tuple~
     }
 
     class Pet {
         +str name
         +str species
+        +list~Task~ tasks
+        +add_task(task: Task) None
+        +remove_task(task: Task) None
     }
 
     class Task {
         +str title
         +int duration_minutes
         +Priority priority
-        +Pet pet
+        +time start_time
+        +Frequency frequency
+        +date start_date
         +bool completed
+        +end_time() time
+        +is_due_on(day: date) bool
     }
 
     class Priority {
@@ -33,11 +36,17 @@ classDiagram
         HIGH
     }
 
+    class Frequency {
+        <<enumeration>>
+        ONCE
+        DAILY
+        WEEKLY
+    }
+
     class ScheduledTask {
+        +Pet pet
         +Task task
-        +int start_minute
         +str reason
-        +end_minute() int
     }
 
     class Schedule {
@@ -47,15 +56,16 @@ classDiagram
     }
 
     class Scheduler {
-        +create_schedule(owner: Owner) Schedule
+        +create_schedule(owner: Owner, day: date) Schedule
     }
 
     Owner "1" o-- "0..*" Pet : owns
-    Owner "1" o-- "0..*" Task : manages
-    Task "0..*" --> "1" Pet : is for
+    Pet "1" *-- "0..*" Task : has
     Task --> Priority : has
+    Task --> Frequency : has
     Schedule "1" *-- "0..*" ScheduledTask : contains
     ScheduledTask "0..*" --> "1" Task : wraps
+    ScheduledTask "0..*" --> "1" Pet : for
     Schedule ..> Task : records skipped
-    Scheduler ..> Owner : reads tasks and free time from
+    Scheduler ..> Owner : reads pets and tasks from
     Scheduler ..> Schedule : creates

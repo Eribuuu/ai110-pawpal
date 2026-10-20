@@ -78,6 +78,12 @@ Post First skeleton created:
 4. Added a scheduled task object that will bridge the gap for showing when and why a tasks is chosen to scheduled or skipped
 5. Added a schedule object to hold the schedule of tasks to be displayed
 
+Time handling refactor:
+1. Removed the owner's free time budget; each task now has its own start time (datetime.time) and duration, with an end time calculated from the two
+2. Added a frequency attribute to tasks (Enum: once, daily, weekly) so the scheduler can tell which tasks are due
+3. Removed the start minute from the scheduled task object since the start and end times now come from the task itself
+4. Added a start date to tasks so frequency has a reference point (once = only that date, daily = every day from then on, weekly = same weekday as the start date), plus an is_due_on helper the scheduler will use to pick a day's tasks
+
 ---
 
 ## 2. Scheduling Logic and Tradeoffs
