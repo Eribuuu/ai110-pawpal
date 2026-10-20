@@ -36,7 +36,9 @@ class Task:
         return day == self.due_date
 
     def mark_complete(self) -> None:
-        """Mark this task as done."""
+        """Mark this task as done; raises ValueError if it already is."""
+        if self.completed:
+            raise ValueError(f"Task '{self.title}' is already completed")
         self.completed = True
 
     def next_occurrence(self) -> "Task | None":
@@ -151,15 +153,15 @@ class Scheduler:
         completed: bool | None = None,
         pet_name: str | None = None,
     ) -> list[ScheduledTask]:
-        """Keep tasks matching the given completion status and/or pet name (case-insensitive); None means don't filter."""
+        """Keep tasks matching the given completion status and/or pet name (case-insensitive); None or "" means don't filter."""
         return [
             s for s in scheduled
             if (completed is None or s.task.completed == completed)
-            and (pet_name is None or s.pet.name.lower() == pet_name.lower())
+            and (not pet_name or s.pet.name.lower() == pet_name.lower())
         ]
 
     def detect_conflicts(self, scheduled: list[ScheduledTask]) -> list[str]:
-        """A warning for each pair of tasks whose time slots overlap; never changes the schedule."""
+        """A warning for each pair of same-day tasks whose time slots overlap; never changes the schedule."""
         def minutes(s: ScheduledTask) -> tuple[int, int]:
             # Plain minutes rather than end_time, so a task running past midnight doesn't wrap to 00:xx
             start = s.task.start_time.hour * 60 + s.task.start_time.minute
@@ -169,6 +171,8 @@ class Scheduler:
         for i, a in enumerate(scheduled):
             a_start, a_end = minutes(a)
             for b in scheduled[i + 1:]:
+                if a.task.due_date != b.task.due_date:
+                    continue
                 b_start, b_end = minutes(b)
                 if a_start < b_end and b_start < a_end:
                     warnings.append(

@@ -93,10 +93,21 @@ pytest
 pytest --cov
 ```
 
+### What the tests cover
+
+- **Recurring tasks**: daily tasks repeat the next day, weekly tasks 7 days later, and one-off tasks don't repeat. Also covers month/year rollovers, and that completing a task twice raises an error.
+- **Filtering**: by completed/pending, by pet name (ignores upper/lower case), or both. A blank filter returns everything.
+- **Conflict detection**: overlapping times are flagged, while back-to-back tasks and tasks on different days are not.
+
 Sample test output:
 
 ```
-# Paste your pytest output here
+platform linux -- Python 3.12.3, pytest-9.1.1, pluggy-1.7.0
+collected 43 items
+
+tests/test_pawpal.py ...........................................   [100%]
+
+43 passed in 0.19s
 ```
 
 ## 📐 Smarter Scheduling
@@ -104,9 +115,9 @@ Sample test output:
 | Feature | Method(s) | Notes |
 |---------|-----------|-------|
 | Task sorting | `Scheduler.sort_by_time()`, `Pet.get_tasks()` | Tasks are ordered by start time. When two start at the same time, the higher-priority one goes first, then the shorter one. `create_schedule()` sorts automatically. |
-| Filtering | `Scheduler.filter_tasks()` | Filters by completion status (`completed=True/False`), by pet name (`pet_name=`, ignores upper/lower case), or both. Leaving a filter out skips it. The original order is kept, so results stay sorted by time. |
-| Conflict handling | `Scheduler.detect_conflicts()` | Checks every pair of tasks for overlapping times, across all pets, and returns one warning per clash. It only warns and never moves or drops a task. Back-to-back tasks (one ends at 08:30, the next starts at 08:30) don't count as a conflict. Warnings appear in the CLI output and as `st.warning` in the app. |
-| Recurring tasks | `Pet.complete_task()`, `Task.next_occurrence()` | Each `Task` is one occurrence with a `due_date`. Completing a daily task adds a copy due the next day, and a weekly task adds one due 7 days later. One-off tasks add nothing. Tasks that aren't completed stay on their original date and don't carry forward. |
+| Filtering | `Scheduler.filter_tasks()` | Filters by completion status (`completed=True/False`), by pet name (`pet_name=`, ignores upper/lower case), or both. Leaving a filter out (or passing a blank name) skips it. The original order is kept, so results stay sorted by time. |
+| Conflict handling | `Scheduler.detect_conflicts()` | Checks every pair of same-day tasks for overlapping times, across all pets, and returns one warning per clash. It only warns and never moves or drops a task. Back-to-back tasks (one ends at 08:30, the next starts at 08:30) don't count as a conflict. Warnings appear in the CLI output and as `st.warning` in the app. |
+| Recurring tasks | `Pet.complete_task()`, `Task.next_occurrence()` | Each `Task` is one occurrence with a `due_date`. Completing a daily task adds a copy due the next day, and a weekly task adds one due 7 days later. One-off tasks add nothing. Completing a task that's already done raises a `ValueError`. Tasks that aren't completed stay on their original date and don't carry forward. |
 
 ## 📸 Demo Walkthrough
 

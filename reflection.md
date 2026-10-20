@@ -133,10 +133,16 @@ I evaluated the suggestion by reading the code that was generated and deciding t
 - What behaviors did you test?
 - Why were these tests important?
 
+I tested the algorithm features. I tested these because these were the most complicated features in the project and not as simple to look at and see if they work as intended from main.
+These tests were important becasue it solidifed what functionality was being completed by those features.
+
 **b. Confidence**
 
 - How confident are you that your scheduler works correctly?
 - What edge cases would you test next if you had more time?
+
+I would say a 4, I wasn't able to test the entirety of the system such as all the classes and methods made prior.
+I would test invalid inputs in my dataclasses.
 
 ---
 
