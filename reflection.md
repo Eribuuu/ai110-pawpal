@@ -107,10 +107,17 @@ Time handling refactor:
 - How did you use AI tools during this project (for example: design brainstorming, debugging, refactoring)?
 - What kinds of prompts or questions were most helpful?
 
+I used AI to help with all aspects of the project. The most help was refactoring when seeing the requirements for the project.
+The prompts that were most helpful were the prompts that asked for feedback on design choices. Keeping claude in manual mode allowed for better implementations and rejections
+
 **b. Judgment and verification**
 
 - Describe one moment where you did not accept an AI suggestion as-is.
 - How did you evaluate or verify what the AI suggested?
+
+One moment where I did not accept a suggestion from claude was when it tried to one-shot the scheduler implementation. It was going beyond what was being asked for the current step of the project.
+It was adding helper functions and also trying to implement algorithms before I indicated that I wanted to add that feature.
+I evaluated the suggestion by reading the code that was generated and deciding that this was beyond the scope of what I needed at the moment.
 
 ---
 

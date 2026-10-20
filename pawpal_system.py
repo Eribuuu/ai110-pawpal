@@ -27,6 +27,7 @@ class Task:
 
     @property
     def end_time(self) -> time:
+        """The time this task finishes, from its start time plus duration."""
         start = datetime.combine(date.today(), self.start_time)
         return (start + timedelta(minutes=self.duration_minutes)).time()
 
@@ -40,6 +41,10 @@ class Task:
             return day.weekday() == self.start_date.weekday()
         return True  # DAILY
 
+    def mark_complete(self) -> None:
+        """Mark this task as done."""
+        self.completed = True
+
 
 @dataclass
 class Pet:
@@ -48,9 +53,11 @@ class Pet:
     tasks: list[Task] = field(default_factory=list)
 
     def add_task(self, task: Task) -> None:
+        """Add a task to this pet's task list."""
         self.tasks.append(task)
 
     def remove_task(self, task: Task) -> None:
+        """Remove a task from this pet's task list."""
         self.tasks.remove(task)
 
     def get_tasks(self, day: date | None = None) -> list[Task]:
@@ -88,15 +95,18 @@ class Schedule:
 
     @property
     def total_minutes(self) -> int:
+        """Total minutes of all scheduled tasks."""
         return sum(s.task.duration_minutes for s in self.scheduled)
 
 
 class Owner:
     def __init__(self, name: str):
+        """Create an owner with a name and no pets."""
         self.name = name
         self.pets: list[Pet] = []
 
     def add_pet(self, pet: Pet) -> None:
+        """Add a pet to this owner."""
         self.pets.append(pet)
 
     def remove_pet(self, pet: Pet) -> None:
