@@ -157,6 +157,21 @@ st.caption("Builds a plan from every pet's tasks due on the chosen day.")
 schedule_day = st.date_input("Schedule for", value=date.today(), key="schedule_day")
 
 if st.button("Generate schedule"):
+    st.session_state.show_schedule = True
+
+
+def complete_task(pending: list[ScheduledTask]) -> None:
+    """Mark the selected task done; recurring tasks get their next occurrence added."""
+    s = pending[st.session_state.pop("complete_choice")]
+    upcoming = s.pet.complete_task(s.task)
+    msg = f"Completed {s.pet.name}: {s.task.title}."
+    if upcoming is not None:
+        msg += f" Next one due {upcoming.due_date:%a, %b %d}."
+    st.toast(msg)
+
+
+# Rebuilt on every rerun so filters and completions show up without regenerating
+if st.session_state.get("show_schedule"):
     scheduler = Scheduler()
     schedule = scheduler.create_schedule(owner, schedule_day)
     for warning in scheduler.detect_conflicts(schedule.scheduled):
@@ -164,21 +179,48 @@ if st.button("Generate schedule"):
     if not schedule.scheduled:
         st.info(f"No tasks due on {schedule_day:%A, %b %d}.")
     else:
-        st.success(
-            f"{len(schedule.scheduled)} task(s) scheduled, {schedule.total_minutes} min total."
+        fcol1, fcol2 = st.columns(2)
+        with fcol1:
+            pet_filter = st.selectbox("Filter by pet", ["All pets"] + [p.name for p in owner.pets])
+        with fcol2:
+            status_filter = st.radio("Status", ["All", "Pending", "Done"], horizontal=True)
+        visible = scheduler.filter_tasks(
+            schedule.scheduled,
+            completed={"All": None, "Pending": False, "Done": True}[status_filter],
+            pet_name=None if pet_filter == "All pets" else pet_filter,
         )
-        st.table(
-            [
-                {
-                    "time": f"{s.task.start_time:%H:%M}-{s.task.end_time:%H:%M}",
-                    "pet": s.pet.name,
-                    "task": s.task.title,
-                    "duration (min)": s.task.duration_minutes,
-                    "priority": s.task.priority.name.lower(),
-                    "why": s.reason,
-                }
-                for s in schedule.scheduled
-            ]
-        )
+
+        if not visible:
+            st.info("No tasks match these filters.")
+        else:
+            visible_minutes = sum(s.task.duration_minutes for s in visible)
+            st.success(f"{len(visible)} task(s) shown, {visible_minutes} min total.")
+            st.table(
+                [
+                    {
+                        "time": f"{s.task.start_time:%H:%M}-{s.task.end_time:%H:%M}",
+                        "pet": s.pet.name,
+                        "task": s.task.title,
+                        "duration (min)": s.task.duration_minutes,
+                        "priority": s.task.priority.name.lower(),
+                        "done": s.task.completed,
+                        "why": s.reason,
+                    }
+                    for s in visible
+                ]
+            )
+
+        pending = scheduler.filter_tasks(visible, completed=False)
+        if pending:
+            ccol1, ccol2 = st.columns([3, 1], vertical_alignment="bottom")
+            with ccol1:
+                st.selectbox(
+                    "Mark a task complete",
+                    range(len(pending)),
+                    format_func=lambda i: f"{pending[i].task.start_time:%H:%M} {pending[i].pet.name}: {pending[i].task.title}",
+                    key="complete_choice",
+                )
+            with ccol2:
+                st.button("Complete", on_click=complete_task, args=(pending,))
     for pet, task, why in schedule.skipped:
         st.warning(f"Skipped {pet.name}: {task.title} ({why})")

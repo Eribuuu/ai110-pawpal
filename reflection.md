@@ -152,10 +152,16 @@ I would test invalid inputs in my dataclasses.
 
 - What part of this project are you most satisfied with?
 
+Im most satisfied with the uinderlying dataclasses that initially were made. I like structuring data in a way that is easy to understand and makes sense for the given domain.
+
 **b. What you would improve**
 
 - If you had another iteration, what would you improve or redesign?
 
+I would improve the UI. It doesnt feel like it represents the capabilities of the backend system.
+
 **c. Key takeaway**
 
 - What is one important thing you learned about designing systems or working with AI on this project?
+
+AI is extremely powerful but it wants to move past the current scope and do everything at once.
