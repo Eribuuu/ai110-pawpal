@@ -53,6 +53,26 @@ class Pet:
     def remove_task(self, task: Task) -> None:
         self.tasks.remove(task)
 
+    def get_tasks(self, day: date | None = None) -> list[Task]:
+        """This pet's tasks ordered by start time; only those due on `day` if one is given."""
+        tasks = self.tasks if day is None else [t for t in self.tasks if t.is_due_on(day)]
+        return sorted(tasks, key=lambda t: t.start_time)
+
+    def display_tasks(self, day: date | None = None) -> str:
+        """A readable list of this pet's tasks, one per line."""
+        tasks = self.get_tasks(day)
+        header = f"{self.name} ({self.species})"
+        if not tasks:
+            return f"{header}\n  No tasks."
+        lines = [header]
+        for t in tasks:
+            check = "x" if t.completed else " "
+            lines.append(
+                f"  [{check}] {t.start_time:%H:%M}-{t.end_time:%H:%M}  {t.title}"
+                f"  ({t.duration_minutes} min, {t.priority.name.lower()}, {t.frequency.value})"
+            )
+        return "\n".join(lines)
+
 
 @dataclass
 class ScheduledTask:
@@ -89,6 +109,21 @@ class Owner:
 
 
 class Scheduler:
-    def create_schedule(self, owner: Owner, day: date) -> Schedule:
-        """Pick the tasks due by frequency, order them by start time, and skip lower-priority tasks that overlap."""
-        pass
+    def create_schedule(self, owner: Owner, day: date | None = None) -> Schedule:
+        """Gather every pet's tasks due on `day` (default today) from the owner, ordered by start time."""
+        day = day or date.today()
+        schedule = Schedule()
+        for pet, task in owner.get_all_tasks():
+            if task.is_due_on(day):
+                schedule.scheduled.append(ScheduledTask(pet, task, f"due {task.frequency.value}"))
+        schedule.scheduled.sort(key=lambda s: s.task.start_time)
+        return schedule
+
+    def display_schedule(self, schedule: Schedule) -> str:
+        """One line per task, showing which pet it belongs to."""
+        if not schedule.scheduled:
+            return "No tasks scheduled."
+        return "\n".join(
+            f"{s.task.start_time:%H:%M}  {s.pet.name}: {s.task.title} ({s.task.duration_minutes} min)"
+            for s in schedule.scheduled
+        )
